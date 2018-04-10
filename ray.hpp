@@ -1,6 +1,6 @@
-#ifndef RAYH
-#define RAYH
-#include "vec3.h"
+#ifndef RAYHPP
+#define RAYHPP
+#include "vec3.hpp"
 
 class ray
 {
@@ -11,14 +11,14 @@ class ray
             A = a;
             B = b;
         }
-        
-        vec3 origin() const 
+
+        vec3 origin() const
         {
             return A;
         }
 
         vec3 direction() const
-        { 
+        {
             return B;
         }
 
@@ -26,9 +26,9 @@ class ray
         {
             return A + t * B;
         }
-        
+
         vec3 A;
         vec3 B;
 };
 
-#endif /* RAYH */
+#endif /* RAYHPP */

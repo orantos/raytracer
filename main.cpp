@@ -1,11 +1,11 @@
 #include <iostream>
-#include "sphere.h"
-#include "hitable_list.h"
+#include "sphere.hpp"
+#include "hitable_list.hpp"
+#include "camera.hpp"
+#include "material.hpp"
 #include "float.h"
-#include "camera.h"
-#include "material.h"
 
-vec3 color(const ray &r, hitable *world, int depth) 
+vec3 color(const ray &r, hitable *world, int depth)
 {
     hit_record rec;
 
@@ -40,15 +40,16 @@ int main()
 
     std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
-    hitable *list[4];
-    list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.8, 0.3, 0.3)));
+    hitable *list[5];
+    list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
     list[1] = new sphere(vec3(0, -100.5, -1), 100,  new lambertian(vec3(0.8, 0.8, 0.0)));
-    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 1.0));
-    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new metal(vec3(0.8, 0.8, 0.8), 0.3));
+    list[2] = new sphere(vec3(1, 0, -1), 0.5, new metal(vec3(0.8, 0.6, 0.2), 0.0));
+    list[3] = new sphere(vec3(-1, 0, -1), 0.5, new dielectric(1.5));
+    list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5));
 
     camera cam;
 
-    hitable *world = new hitable_list(list, 4);
+    hitable *world = new hitable_list(list, 5);
 
     for (int j = ny - 1; j >= 0; j--)
     {
@@ -71,7 +72,7 @@ int main()
             int ir = int(255.99 * col[0]);
             int ig = int(255.99 * col[1]);
             int ib = int(255.99 * col[2]);
-            
+
             std::cout << ir << " " << ig << " " << ib << "\n";
         }
     }

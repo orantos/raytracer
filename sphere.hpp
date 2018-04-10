@@ -1,7 +1,7 @@
-#ifndef SPHEREH
-#define SPHEREH
+#ifndef SPHEREHPP
+#define SPHEREHPP
 
-#include "hitable.h"
+#include "hitable.hpp"
 
 class sphere: public hitable
 {
@@ -35,7 +35,7 @@ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 
             return true;
         }
-        
+
         temp = (-b + sqrt(discriminant)) / a;
         if (temp < t_max && temp > t_min)
         {
@@ -50,4 +50,4 @@ bool sphere::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
     return false;
 }
 
-#endif /* SPHEREH */
+#endif /* SPHEREHPP */

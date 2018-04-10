@@ -1,7 +1,7 @@
-#ifndef CAMERAH
-#define CAMERAH
+#ifndef CAMERAHPP
+#define CAMERAHPP
 
-#include "ray.h"
+#include "ray.hpp"
 
 class camera
 {
@@ -11,7 +11,7 @@ class camera
 			/* width and height have this ratio to spot easily possible transpose issues */
 			origin = vec3(0.0, 0.0, 0.0);
 			lower_left_corner = vec3(-2.0, -1.0, -1.0);
-			horizontal = vec3( 4.0, 0.0, 0.0); 
+			horizontal = vec3( 4.0, 0.0, 0.0);
 			vertical = vec3(0.0, 2.0, 0.0);
 		}
 
@@ -26,4 +26,4 @@ class camera
 		vec3 vertical;
 };
 
-#endif /* CAMERAH */
+#endif /* CAMERAHPP */

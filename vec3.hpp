@@ -141,4 +141,4 @@ inline vec3 unit_vector(vec3 v) {
     return v / v.length();
 }
 
-#endif /* VEC3HPP */
+#endif // VEC3HPP

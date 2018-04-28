@@ -66,4 +66,4 @@ class camera
 		float lens_radius;
 };
 
-#endif /* CAMERAHPP */
+#endif // CAMERAHPP

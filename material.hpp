@@ -154,4 +154,4 @@ class dielectric : public material
 		float ref_idx;
 };
 
-#endif /* MATERIALHPP */
+#endif // MATERIALHPP

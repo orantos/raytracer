@@ -33,9 +33,9 @@ class ray
             return A + t * B;
         }
 
-        vec3 A;
-        vec3 B;
-        float exist_time;
+        vec3 A;  // Ray origin.
+        vec3 B;  // Ray direction.
+        float exist_time;  // Time
 };
 
 #endif /* RAYHPP */

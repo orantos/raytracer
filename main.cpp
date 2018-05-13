@@ -34,6 +34,18 @@ vec3 color(const ray &r, hitable *world, int depth)
     }
 }
 
+hitable *two_perlin_spheres()
+{
+    texture *perlin_texture = new noise_texture(4);
+
+    hitable **list = new hitable *[2];
+
+    list[0] = new sphere(vec3(0, -1000, 0), 1000, new lambertian(perlin_texture));
+    list[1] = new sphere(vec3(0, 2, 0), 2, new lambertian(perlin_texture));
+
+    return new hitable_list(list, 2);
+}
+
 hitable *two_spheres()
 {
     texture *checker = new checker_texture(new constant_texture(vec3(0.2, 0.3, 0.1)),
@@ -113,7 +125,7 @@ int main()
     list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5));
     hitable *world = new hitable_list(list, 5);
     */
-    hitable *world = two_spheres();
+    hitable *world = two_perlin_spheres();
 
     vec3 lookfrom(13, 2, 3);
     vec3 lookat(0, 0, 0);

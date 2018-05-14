@@ -5,7 +5,11 @@
 #include "camera.hpp"
 #include "material.hpp"
 #include "texture.hpp"
+#include "image_texture.hpp"
 #include "float.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 
 vec3 color(const ray &r, hitable *world, int depth)
 {
@@ -19,6 +23,8 @@ vec3 color(const ray &r, hitable *world, int depth)
         if(depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
         {
             return attenuation * color(scattered, world, depth + 1);
+            // If we want to just map a texture image, return just "attenuation".
+            // return attenuation;
         }
         else
         {
@@ -32,6 +38,13 @@ vec3 color(const ray &r, hitable *world, int depth)
 
         return (1.0 - t) * vec3(1.0, 1.0, 1.0) + t * vec3(0.5, 0.7, 1.0);
     }
+}
+
+hitable *earth() {
+    int nx, ny, nn;
+    unsigned char *tex_data = stbi_load("earthmap.jpg", &nx, &ny, &nn, 0);
+    material *mat =  new lambertian(new image_texture(tex_data, nx, ny));
+    return new sphere(vec3(0,0, 0), 2, mat);
 }
 
 hitable *two_perlin_spheres()
@@ -125,7 +138,9 @@ int main()
     list[4] = new sphere(vec3(-1, 0, -1), -0.45, new dielectric(1.5));
     hitable *world = new hitable_list(list, 5);
     */
-    hitable *world = two_perlin_spheres();
+
+    hitable *world = earth();
+    //hitable *world = two_perlin_spheres();
 
     vec3 lookfrom(13, 2, 3);
     vec3 lookat(0, 0, 0);

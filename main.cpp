@@ -7,7 +7,7 @@
 #include "texture.hpp"
 #include "image_texture.hpp"
 #include "aarect.hpp"
-#include "float.h"
+#include "box.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -54,12 +54,20 @@ hitable *cornell_box()
     material *green = new lambertian(new constant_texture(vec3(0.12, 0.45, 0.15)));
     material *light = new diffuse_light(new constant_texture(vec3(15, 15, 15)));
 
+    // Cornell Box
     list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
     list[i++] = new yz_rect(0, 555, 0, 555, 0, red);
     list[i++] = new xz_rect(213, 343, 227, 332, 554, light);
     list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
     list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
     list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));
+
+    // 2 Boxes inside the room (withut rotation or translation)
+    // list[i++] = new box(vec3(130, 0, 65), vec3(295, 165, 230), white);
+    // list[i++] = new box(vec3(265, 0, 295), vec3(430, 330, 460), white);
+
+    list[i++] = new translate(new rotate_y(new box(vec3(0, 0, 0), vec3(165, 165, 165), white), -18), vec3(130, 0, 65));
+    list[i++] = new translate(new rotate_y(new box(vec3(0, 0, 0), vec3(165, 330, 165), white), 15), vec3(265, 0, 295));
 
     return new hitable_list(list, i);
 }

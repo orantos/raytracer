@@ -187,4 +187,23 @@ class dielectric : public material
 		float ref_idx;
 };
 
+/*
+ *  Class to implement isotropic materials. Look at chapter 8 for more information about the maths behind this class.
+ */
+class isotropic : public material
+{
+	public:
+		isotropic(texture *a) : albedo(a) {}
+
+		virtual bool scatter(const ray &ray_in, const hit_record &rec, vec3 &attenuation, ray &scattered) const
+		{
+			scattered = ray(rec.p, random_in_unit_sphere());
+			attenuation = albedo->value(rec.u, rec.v, rec.p);
+
+			return true;
+		}
+
+		texture *albedo;
+};
+
 #endif // MATERIALHPP

@@ -24,7 +24,7 @@ class aabb
 			return m_tmax;
 		}
 
-		bool hit(const ray &r, float tmin, float tmax)
+		bool hit(const ray &r, float tmin, float tmax) const
 		{
 			for (int a = 0; a < 3; a++)
 			{

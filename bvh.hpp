@@ -13,18 +13,18 @@ class bvh_node : public hitable
 		virtual bool bounding_box(float t0, float t1, aabb &box) const;
 
 		hitable *left;
-		hitable *rigtht;
+		hitable *right;
 		aabb box;
 };
 
-bool bounding_box::bvh_node(float t0, float t1, aabb &b) const
+bool bvh_node::bounding_box(float t0, float t1, aabb &b) const
 {
-	b = box
+	b = box;
 
 	return true;
 }
 
-bool hit::bvh_node(const ray &r, float t_min, float t_max, hit_record &rec) const
+bool bvh_node::hit(const ray &r, float t_min, float t_max, hit_record &rec) const
 {
 	if (box.hit(r, t_min, t_max))
 	{
@@ -68,7 +68,7 @@ bool hit::bvh_node(const ray &r, float t_min, float t_max, hit_record &rec) cons
 	}
 }
 
-static box_x_compare(const void *a, const void *b)
+static int box_x_compare(const void *a, const void *b)
 {
 	aabb box_left;
 	aabb box_right;
@@ -88,7 +88,7 @@ static box_x_compare(const void *a, const void *b)
 		return 1;
 }
 
-static box_y_compare(const void *a, const void *b)
+static int box_y_compare(const void *a, const void *b)
 {
 	aabb box_left;
 	aabb box_right;
@@ -108,7 +108,7 @@ static box_y_compare(const void *a, const void *b)
 		return 1;
 }
 
-static box_z_compare(const void *a, const void *b)
+static int box_z_compare(const void *a, const void *b)
 {
 	aabb box_left;
 	aabb box_right;

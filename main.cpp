@@ -12,8 +12,14 @@
 #include "bvh.hpp"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <thread>
+#include <vector>
+#include <sstream>
 
-
+// Global variables, to be used on main() and render_scene()
+const int nx = 80;
+const int ny = 80;
+const int ns = 100; // Number of samples
 
 vec3 color(const ray &r, hitable *world, int depth)
 {
@@ -254,14 +260,114 @@ hitable *random_scene()
     return new hitable_list(list, i);
 }
 
+void render_scene(int start_row, int end_row, int *pixels)
+{
+    //hitable *world = cornell_box_final_book2();
+    hitable *world = cornell_smoke();
+    //hitable *world = cornell_box();
+    //hitable *world = simple_light();
+    //hitable *world = earth();
+    //hitable *world = two_perlin_spheres();
+
+    //vec3 lookfrom(478, 278, -600);
+    //vec3 lookat(278, 278, 0);
+    vec3 lookfrom(278, 278, -800);
+    vec3 lookat(278, 278, 0);
+    float dist_to_focus = 10.0;
+    float aperture = 0.0;
+    float vfov = 40.0;
+    // Setup until chapter 6 (included) of the second book.
+    //vec3 lookfrom(20, 4, 5);
+    //vec3 lookat(0, 2, 0);
+    //float dist_to_focus = 10.0;
+    //float aperture = 0.0;
+
+    camera cam(lookfrom, lookat, vec3(0, 1, 0), vfov, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
+    // Setup until chapter 6 (included) of the second book.
+    //camera cam(lookfrom, lookat, vec3(0, 1, 0), 20, float(nx) / float(ny), aperture, dist_to_focus, 0.0, 1.0);
+
+    for (int j = end_row; j >= start_row; j--)
+    {
+        int *row = &pixels[nx * j * 3];
+        for (int i = 0; i < nx; i++)
+        {
+            vec3 col{0, 0, 0};
+
+            for(int s = 0; s < ns; s++)
+            {
+                float u = float(i + drand48()) / float(nx);
+                float v = float(j + drand48()) / float(ny);
+
+                ray r = cam.get_ray(u, v);
+                col += color(r, world, 0);
+            }
+
+            col /= float(ns);
+            col = vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
+
+            int ir = int(255.99 * col[0]);
+            int ig = int(255.99 * col[1]);
+            int ib = int(255.99 * col[2]);
+
+            // Access the current pixel to store. There are 3 components per pixel.
+            row[(i*3) + 0] = ir;
+            row[(i*3) + 1] = ig;
+            row[(i*3) + 2] = ib;
+        }
+    }
+}
+
 int main()
 {
-    int nx = 800;
-    int ny = 800;
-    int ns = 100; // Number of samples
-
     std::cout << "P3\n" << nx << " " << ny << "\n255\n";
 
+    /* Multithread code starts here */
+    int pixels[nx * ny * 3]; // temporary buffer to store 3 components per pixel.
+    int num_threads = 4;
+    int rows_per_thread = ny / num_threads;
+
+    if ((rows_per_thread % num_threads) != 0)
+    {
+        std::cerr << "\nThe image height must be divisible by the number of threads used\n";
+    }
+
+    std::vector<std::thread> threads;
+
+    for (int i = 0; i < num_threads; ++i)
+    {
+        int start_row = rows_per_thread * i;
+        int end_row;
+
+        if (i + 1 == num_threads)
+        {
+            end_row = ny - 1;
+        }
+        else
+        {
+            end_row = start_row + rows_per_thread - 1;
+        }
+
+        threads.push_back(std::thread(render_scene, start_row, end_row, pixels));
+    }
+
+        for (std::thread &t : threads)
+    {
+        t.join();
+    }
+
+    // Write pixels to the ppm file
+    for (int j = ny-1; j >= 0; j--)
+    {
+        int *row = &pixels[nx * j * 3];
+
+        for (int i = 0; i < nx; i++)
+        {
+            std::cout << row[i*3 + 0] << " " << row[i*3 + 1] << " " << row[i*3 + 2] << "\n";
+        }
+    }
+    // Multithread code ends here.
+#if 0
+    // SINGLE THREAD CODE
     /*
     hitable *list[5];
     list[0] = new sphere(vec3(0, 0, -1), 0.5, new lambertian(vec3(0.1, 0.2, 0.5)));
@@ -272,17 +378,17 @@ int main()
     hitable *world = new hitable_list(list, 5);
     */
 
-    hitable *world = cornell_box_final_book2();
-    //hitable *world = cornell_smoke();
     //hitable *world = cornell_box();
+    //hitable *world = cornell_box_final_book2();
+    hitable *world = cornell_smoke();
     //hitable *world = simple_light();
     //hitable *world = earth();
     //hitable *world = two_perlin_spheres();
 
-    vec3 lookfrom(478, 278, -600);
-    vec3 lookat(278, 278, 0);
-    //vec3 lookfrom(278, 278, -800);
+    //vec3 lookfrom(478, 278, -600);
     //vec3 lookat(278, 278, 0);
+    vec3 lookfrom(278, 278, -800);
+    vec3 lookat(278, 278, 0);
     float dist_to_focus = 10.0;
     float aperture = 0.0;
     float vfov = 40.0;
@@ -321,4 +427,5 @@ int main()
             std::cout << ir << " " << ig << " " << ib << "\n";
         }
     }
+#endif
 }

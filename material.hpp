@@ -4,6 +4,9 @@
 #include "hitable.hpp"
 #include "texture.hpp"
 
+/*
+ * Real glass has reflectivity that may varies with angle. This is a polynomial approximation done by Chritophe Schlick
+ */
 float schlick(float cosine, float ref_idx)
 {
 	float r0 = (1 - ref_idx) / (1 + ref_idx);
@@ -40,6 +43,11 @@ vec3 reflect(const vec3 &v, const vec3 &n)
 	return v - 2.0 * dot(v, n) * n;
 }
 
+/*
+ * This returns a random vector/point IN a unit sphere. The way it works is we pick a random point that is inside a
+ * unit cube where X, Y and Z all range form -1 to +1. Then whe checker whether that point is also contained inside the
+ * unit sphere contained inside the cube.
+ */
 vec3 random_in_unit_sphere()
 {
     vec3 p;
@@ -47,15 +55,34 @@ vec3 random_in_unit_sphere()
     do
     {
         p = 2.0 * vec3(drand48(), drand48(), drand48()) - vec3(1, 1, 1);
-    } while (p.squared_length() >= 1.0);
+    } while (dot(p, p) >= 1.0);
 
     return p;
+}
+
+/*
+ * This is a version of the function above but returns a unit vector, which in other words means a point/vector that is
+ * on the surface of the unit sphere.
+ */
+vec3 random_on_unit_sphere()
+{
+	vec3 p = random_in_unit_sphere();
+
+	return unit_vector(p);
 }
 
 class material
 {
 	public:
-		virtual bool scatter(const ray &ray_in, const hit_record &rec, vec3 &attenuation, ray &scattered) const = 0;
+		virtual bool scatter(const ray &ray_in, const hit_record &rec, vec3 &albedo, ray &scattered, float &pdf) const
+		{
+			return false;
+		}
+
+		virtual float scattering_pdf(const ray &ray_in, const hit_record &rec, ray &scattered) const
+		{
+			return 0.0;
+		}
 
 		// To avoid all the non-emitting materials to need to implement this function, we do it here in the base class.
 		virtual vec3 emitted(float u, float v, const vec3 &p) const
@@ -91,15 +118,38 @@ class lambertian : public material
 	public:
 		lambertian(texture *a) : albedo(a) {}
 
+		// the Scattering PDF of a Lambertian material is proportional to cos(theta), which is the dot product here
+		float scattering_pdf(const ray &ray_in, const hit_record &rec, ray &scattered) const
+		{
+			float cosine = dot(rec.normal, unit_vector(scattered.direction()));
+
+			if (cosine < 0)
+			{
+				cosine = 0;
+			}
+
+			return cosine / M_PI;
+		}
+
 		/*
 		 * "scattter" is how much the ray has been dispersed, or say it absorvered the ray. If scattered, then
 		 * "attenuation" represents how much the ray should be attenuated because of the scatter.
 		 */
-		virtual bool scatter(const ray &r_in, const hit_record &rec, vec3 &attenuation, ray &scattered) const
+		virtual bool scatter(const ray &ray_in, const hit_record &rec, vec3 &alb, ray &scattered, float &pdf) const
 		{
-			vec3 target = rec.p + rec.normal + random_in_unit_sphere();
-			scattered = ray(rec.p,  target - rec.p, r_in.time());
-			attenuation = albedo->value(rec.u, rec.v, rec.p);
+			vec3 direction;
+			do
+			{
+				direction = random_in_unit_sphere();
+			}
+			while (dot(direction, rec.normal) < 0);
+
+			scattered = ray(rec.p, unit_vector(direction), ray_in.time());
+			alb = albedo->value(rec.u, rec.v, rec.p);
+
+			// PDF to waight against.
+			//pdf = dot(rec.normal, scattered.direction()) / M_PI;
+			pdf = 0.5 / M_PI;
 
 			return true;
 		}

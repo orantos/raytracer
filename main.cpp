@@ -17,8 +17,8 @@
 #include <sstream>
 
 // Global variables, to be used on main() and render_scene()
-const int nx = 80;
-const int ny = 80;
+const int nx = 800;
+const int ny = 800;
 const int ns = 100; // Number of samples
 
 vec3 color(const ray &r, hitable *world, int depth)
@@ -33,9 +33,14 @@ vec3 color(const ray &r, hitable *world, int depth)
         // If the material in the hitpoint is an emitting material, the color emitted affects on the returned value.
         vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
 
-        if(depth < 50 && rec.mat_ptr->scatter(r, rec, attenuation, scattered))
+        // Probability Density Function (PDF).
+        float pdf;
+        vec3 albedo;
+
+        if(depth < 50 && rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
         {
-            return emitted + attenuation * color(scattered, world, depth + 1);
+            // Color = (Albdo * scattering_pdf(direction) * color(direction)) / pdf(direction)
+            return emitted + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered) * color(scattered, world, depth + 1) / pdf;
             // If we want to just map a texture image, return just "attenuation".
             // return attenuation;
         }
@@ -263,14 +268,17 @@ hitable *random_scene()
 void render_scene(int start_row, int end_row, int *pixels)
 {
     //hitable *world = cornell_box_final_book2();
-    hitable *world = cornell_smoke();
-    //hitable *world = cornell_box();
+    //hitable *world = cornell_smoke();
+    hitable *world = cornell_box();
     //hitable *world = simple_light();
     //hitable *world = earth();
     //hitable *world = two_perlin_spheres();
 
+    // Final scene book 2 camera settings
     //vec3 lookfrom(478, 278, -600);
     //vec3 lookat(278, 278, 0);
+
+    // Cornell Box camera settings
     vec3 lookfrom(278, 278, -800);
     vec3 lookat(278, 278, 0);
     float dist_to_focus = 10.0;
@@ -385,13 +393,17 @@ int main()
     //hitable *world = earth();
     //hitable *world = two_perlin_spheres();
 
+    // Final scene book 2 camera settings
     //vec3 lookfrom(478, 278, -600);
     //vec3 lookat(278, 278, 0);
+
+    // Cornell Box camera settings
     vec3 lookfrom(278, 278, -800);
     vec3 lookat(278, 278, 0);
     float dist_to_focus = 10.0;
     float aperture = 0.0;
     float vfov = 40.0;
+
     // Setup until chapter 6 (included) of the second book.
     //vec3 lookfrom(20, 4, 5);
     //vec3 lookat(0, 2, 0);

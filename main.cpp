@@ -21,6 +21,14 @@ const int nx = 800;
 const int ny = 800;
 const int ns = 100; // Number of samples
 
+inline vec3 de_nan(const vec3& c) {
+    vec3 temp = c;
+    if (!(temp[0] == temp[0])) temp[0] = 0;
+    if (!(temp[1] == temp[1])) temp[1] = 0;
+    if (!(temp[2] == temp[2])) temp[2] = 0;
+    return temp;
+}
+
 vec3 color(const ray &r, hitable *world, int depth)
 {
     hit_record rec;
@@ -307,7 +315,7 @@ void render_scene(int start_row, int end_row, int *pixels)
                 float v = float(j + drand48()) / float(ny);
 
                 ray r = cam.get_ray(u, v);
-                col += color(r, world, 0);
+                col += de_nan(color(r, world, 0));
             }
 
             col /= float(ns);

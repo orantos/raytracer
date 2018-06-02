@@ -3,6 +3,7 @@
 
 #include "hitable.hpp"
 #include "texture.hpp"
+#include "orthonormal.hpp"
 
 /*
  * Real glass has reflectivity that may varies with angle. This is a polynomial approximation done by Chritophe Schlick
@@ -113,6 +114,19 @@ class diffuse_light : public material
 		texture *emit;
 };
 
+static vec3 random_cosine_directions()
+{
+	float r1 = drand48();
+	float r2 = drand48();
+
+	float z = sqrt(1 - r2);
+	float phi = 2 * M_PI * r1;
+	float x = cos(phi) * 2 * sqrt(r2);
+	float y = sin(phi) * 2 * sqrt(r2);
+
+	return vec3(x, y, z);
+}
+
 class lambertian : public material
 {
 	public:
@@ -137,19 +151,19 @@ class lambertian : public material
 		 */
 		virtual bool scatter(const ray &ray_in, const hit_record &rec, vec3 &alb, ray &scattered, float &pdf) const
 		{
-			vec3 direction;
-			do
-			{
-				direction = random_in_unit_sphere();
-			}
-			while (dot(direction, rec.normal) < 0);
+			orthonormal uvw;
+
+			uvw.build_from_w(rec.normal);
+
+			vec3 direction = uvw.local(random_cosine_directions());
 
 			scattered = ray(rec.p, unit_vector(direction), ray_in.time());
 			alb = albedo->value(rec.u, rec.v, rec.p);
 
-			// PDF to waight against.
+			// PDF to weight against.
 			//pdf = dot(rec.normal, scattered.direction()) / M_PI;
-			pdf = 0.5 / M_PI;
+			//pdf = 0.5 / M_PI;
+			pdf = dot(uvw.w(), scattered.direction()) / M_PI;
 
 			return true;
 		}

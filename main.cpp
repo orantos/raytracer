@@ -48,7 +48,8 @@ vec3 color(const ray &r, hitable *world, int depth)
         if(depth < 50 && rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
         {
             // Sampling from light directly. Check chapter 7 from third book for more information.
-            vec3 on_light = vec3(213 + drand48() * (343-213), 554, 227); // Values from xz_rect "light" in Cornell Box
+            // The harcoded values are from xz_rect "light" in Cornell Box scene,
+            vec3 on_light = vec3(213 + drand48() * (343-213), 554, 227 + drand48() * (332 - 227));
             vec3 to_light = vec3(on_light - rec.p);
 
             float distance_squared = to_light.squared_length();

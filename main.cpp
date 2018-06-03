@@ -19,7 +19,7 @@
 // Global variables, to be used on main() and render_scene()
 const int nx = 800;
 const int ny = 800;
-const int ns = 100; // Number of samples
+const int ns = 10; // Number of samples
 
 inline vec3 de_nan(const vec3& c) {
     vec3 temp = c;
@@ -39,7 +39,7 @@ vec3 color(const ray &r, hitable *world, int depth)
         vec3 attenuation;
 
         // If the material in the hitpoint is an emitting material, the color emitted affects on the returned value.
-        vec3 emitted = rec.mat_ptr->emitted(rec.u, rec.v, rec.p);
+        vec3 emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
 
         // Probability Density Function (PDF).
         float pdf;
@@ -47,6 +47,32 @@ vec3 color(const ray &r, hitable *world, int depth)
 
         if(depth < 50 && rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
         {
+            // Sampling from light directly. Check chapter 7 from third book for more information.
+            vec3 on_light = vec3(213 + drand48() * (343-213), 554, 227); // Values from xz_rect "light" in Cornell Box
+            vec3 to_light = vec3(on_light - rec.p);
+
+            float distance_squared = to_light.squared_length();
+
+            to_light.make_unit_vector();
+
+            if (dot(to_light, rec.normal) < 0)
+            {
+                return emitted;
+            }
+
+            float light_area = (343 - 213) * (332 - 227);
+            float light_cosine = fabs(to_light.y());
+
+            if (light_cosine < 0.000001)
+            {
+                return emitted;
+            }
+
+            // p(direction) = distance(rec.p, position_in_light_area)^2 / (cos(alpha) + light_area)
+            pdf = distance_squared / (light_cosine * light_area);
+            // We override whatever value was written in the material call to "scatter()"
+            scattered = ray(rec.p, to_light, r.time());
+
             // Color = (Albdo * scattering_pdf(direction) * color(direction)) / pdf(direction)
             return emitted + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered) * color(scattered, world, depth + 1) / pdf;
             // If we want to just map a texture image, return just "attenuation".
@@ -162,7 +188,7 @@ hitable *cornell_box()
     // Cornell Box
     list[i++] = new flip_normals(new yz_rect(0, 555, 0, 555, 555, green));
     list[i++] = new yz_rect(0, 555, 0, 555, 0, red);
-    list[i++] = new xz_rect(213, 343, 227, 332, 554, light);
+    list[i++] = new flip_normals(new xz_rect(213, 343, 227, 332, 554, light));
     list[i++] = new flip_normals(new xz_rect(0, 555, 0, 555, 555, white));
     list[i++] = new xz_rect(0, 555, 0, 555, 0, white);
     list[i++] = new flip_normals(new xy_rect(0, 555, 0, 555, 555, white));

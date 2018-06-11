@@ -19,7 +19,7 @@
 // Global variables, to be used on main() and render_scene()
 const int nx = 800;
 const int ny = 800;
-const int ns = 10; // Number of samples
+const int ns = 100; // Number of samples
 
 inline vec3 de_nan(const vec3& c) {
     vec3 temp = c;
@@ -42,40 +42,24 @@ vec3 color(const ray &r, hitable *world, int depth)
         vec3 emitted = rec.mat_ptr->emitted(r, rec, rec.u, rec.v, rec.p);
 
         // Probability Density Function (PDF).
-        float pdf;
+        float pdf_val;
         vec3 albedo;
 
-        if(depth < 50 && rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf))
+        if(depth < 50 && rec.mat_ptr->scatter(r, rec, albedo, scattered, pdf_val))
         {
-            // Sampling from light directly. Check chapter 7 from third book for more information.
-            // The harcoded values are from xz_rect "light" in Cornell Box scene,
-            vec3 on_light = vec3(213 + drand48() * (343-213), 554, 227 + drand48() * (332 - 227));
-            vec3 to_light = vec3(on_light - rec.p);
+            hitable *light_shape = new xz_rect(213, 343, 227, 332, 554, 0);
+            hitable_pdf pdf_0(light_shape, rec.p);
+            cosine_pdf pdf_1(rec.normal);
+            mixture_pdf mix_p(&pdf_0, &pdf_1);
 
-            float distance_squared = to_light.squared_length();
-
-            to_light.make_unit_vector();
-
-            if (dot(to_light, rec.normal) < 0)
-            {
-                return emitted;
-            }
-
-            float light_area = (343 - 213) * (332 - 227);
-            float light_cosine = fabs(to_light.y());
-
-            if (light_cosine < 0.000001)
-            {
-                return emitted;
-            }
-
-            // p(direction) = distance(rec.p, position_in_light_area)^2 / (cos(alpha) + light_area)
-            pdf = distance_squared / (light_cosine * light_area);
             // We override whatever value was written in the material call to "scatter()"
-            scattered = ray(rec.p, to_light, r.time());
+            scattered = ray(rec.p, mix_p.generate(), r.time());
+
+            pdf_val = mix_p.value(scattered.direction());
 
             // Color = (Albdo * scattering_pdf(direction) * color(direction)) / pdf(direction)
-            return emitted + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered) * color(scattered, world, depth + 1) / pdf;
+            return emitted + albedo * rec.mat_ptr->scattering_pdf(r, rec, scattered)
+                   * color(scattered, world, depth + 1) / pdf_val;
             // If we want to just map a texture image, return just "attenuation".
             // return attenuation;
         }

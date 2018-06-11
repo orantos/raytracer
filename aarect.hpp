@@ -90,6 +90,31 @@ class xz_rect : public hitable
 			return true;
 		}
 
+		virtual float pdf_value(const vec3 &origin, const vec3 &v) const
+        {
+        	hit_record rec;
+
+			if (this->hit(ray(origin, v), 0.001, FLT_MAX, rec))
+			{
+				float area = (x1 - x0) * (z1 - z0);
+				float distance_squared = rec.t * rec.t *  v.squared_length();
+				float cosine = fabs(dot(v, rec.normal) / v.length());
+
+				return distance_squared / (cosine * area);
+			}
+			else
+			{
+				return 0;
+			}
+        }
+
+        virtual vec3 random(const vec3 &origin) const
+		{
+			vec3 random_point = vec3(x0 + drand48() * (x1 - x0), k, z0 + drand48() * (z1 - z0));
+
+			return random_point - origin;
+		}
+
 		material *mat;
 		// 4 points defining a rectangle/plane.
 		float x0;
